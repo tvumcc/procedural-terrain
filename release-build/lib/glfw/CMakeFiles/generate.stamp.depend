@@ -1,0 +1,17 @@
+# CMake generation dependency list for this directory.
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/BasicConfigVersion-SameMajorVersion.cmake.in
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/CMakeDependentOption.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/CMakePackageConfigHelpers.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/CheckCSourceCompiles.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/CheckIncludeFile.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/CheckLibraryExists.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/FindDoxygen.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/FindPackageHandleStandardArgs.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/FindPackageMessage.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/FindThreads.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/GNUInstallDirs.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/Internal/CheckSourceCompiles.cmake
+C:/Apps/cmake-3.23.2-windows-x86_64/share/cmake-3.23/Modules/WriteBasicConfigVersionFile.cmake
+C:/Dev/procedural-terrain/lib/glfw/CMake/cmake_uninstall.cmake.in
+C:/Dev/procedural-terrain/lib/glfw/CMake/glfw3Config.cmake.in
+C:/Dev/procedural-terrain/lib/glfw/CMakeLists.txt

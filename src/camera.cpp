@@ -21,8 +21,8 @@ void Camera::move(Direction direction, float deltaTime) {
 	if (direction == Direction::Backward) position -= front * movement_speed * deltaTime;
 	if (direction == Direction::Right) position += right * movement_speed * deltaTime;
 	if (direction == Direction::Left) position -= right * movement_speed * deltaTime;
-	if (direction == Direction::Up) position += up * movement_speed * deltaTime;
-	if (direction == Direction::Down) position -= up * movement_speed * deltaTime;
+	if (direction == Direction::Up) position += glm::vec3(0.0f, 1.0f, 0.0f) * movement_speed * deltaTime;
+	if (direction == Direction::Down) position -= glm::vec3(0.0f, 1.0f, 0.0f) * movement_speed * deltaTime;
 }
 
 void Camera::rotate(float x_offset, float y_offset) { x_offset *= mouse_sensitivity;
@@ -32,7 +32,7 @@ void Camera::rotate(float x_offset, float y_offset) { x_offset *= mouse_sensitiv
 	pitch += y_offset;
 
 	if (pitch > 89.0f) pitch = 89.0f;
-	if (pitch < -89.0f) pitch = 89.0f;
+	if (pitch < -89.0f) pitch = -89.0f;
 
 	update_camera_vectors();
 }
@@ -55,6 +55,10 @@ glm::mat4 Camera::vp_matrix() {
 
 bool Camera::get_first_mouse() {return this->first_mouse;}
 void Camera::unset_first_mouse() {this->first_mouse = false;}
+
+glm::vec3 Camera::get_position() {return this->position;}
+glm::vec3 Camera::get_front() {return this->front;}
+glm::vec3 Camera::get_right() {return this->right;}
 
 void Camera::set_fov(float fov) {this->fov = fov;}
 void Camera::set_aspect_ratio(int width, int height) {this->aspect_ratio = (float)width/(float)height;}

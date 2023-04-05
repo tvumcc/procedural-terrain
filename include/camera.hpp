@@ -20,6 +20,10 @@ public:
 	bool get_first_mouse();
 	void unset_first_mouse();
 
+	glm::vec3 get_position();
+	glm::vec3 get_front();
+	glm::vec3 get_right();
+
 	void set_fov(float fov);
 	void set_aspect_ratio(int width, int height);
 	void set_speed(float speed);

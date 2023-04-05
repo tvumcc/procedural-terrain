@@ -11,6 +11,7 @@
 enum class ShaderType {
     Vertex,
     Fragment,
+    Geometry,
     ShaderProgram,
 };
 
@@ -18,7 +19,7 @@ class Shader {
 public:
     unsigned int ID;
     
-    Shader(const char* vertex_shader_path, const char* fragment_shader_path);
+    Shader(const char* vertex_shader_path, const char* fragment_shader_path, const char* geometry_shader_path = "none");
 
     /*Uniform setting methods*/
 
@@ -36,5 +37,6 @@ public:
 private:
     const char* vertex_shader_file_name;
     const char* fragment_shader_file_name;
+    const char* geometry_shader_file_name;
     void checkErrors(unsigned int ID, ShaderType type);
 };

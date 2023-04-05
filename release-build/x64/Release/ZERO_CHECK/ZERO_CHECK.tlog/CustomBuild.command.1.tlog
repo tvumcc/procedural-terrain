@@ -1,0 +1,10 @@
+^C:\DEV\PROCEDURAL-TERRAIN\RELEASE-BUILD\CMAKEFILES\9F06A86C0CC3E91F0B5A146004293402\GENERATE.STAMP.RULE
+setlocal
+C:\Apps\cmake-3.23.2-windows-x86_64\bin\cmake.exe -SC:/Dev/procedural-terrain -BC:/Dev/procedural-terrain/release-build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Dev/procedural-terrain/release-build/terrain.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

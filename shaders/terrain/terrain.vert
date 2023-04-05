@@ -4,7 +4,9 @@ layout (location = 0) in vec3 aPos;
 
 uniform mat4 model;
 uniform mat4 vp;
-uniform int permutation_table[256];
+uniform float x_pos;
+uniform float z_pos;
+uniform int permutation_table[512];
 
 vec2 constantVector(int value) {
     if (value == 0) return vec2(1.0, 1.0);
@@ -38,10 +40,10 @@ float perlinNoise(float x, float y) {
     vec2 bl = vec2(xf, yf);
 
     // hashed values
-    int htr = permutation_table[(permutation_table[(xr+1) & 255]+yr+1) & 255];
-    int htl = permutation_table[(permutation_table[xr & 255]+yr+1) & 255];
-    int hbr = permutation_table[(permutation_table[(xr+1) & 255]+yr) & 255];
-    int hbl = permutation_table[(permutation_table[xr & 255]+yr) & 255];
+    int htr = permutation_table[(permutation_table[(xr+1)]+yr+1)];
+    int htl = permutation_table[(permutation_table[xr]+yr+1)];
+    int hbr = permutation_table[(permutation_table[(xr+1)]+yr)];
+    int hbl = permutation_table[(permutation_table[xr]+yr)];
 
     // dot products
     float dtr = dot(tr, constantVector(htr & 3));
@@ -55,6 +57,27 @@ float perlinNoise(float x, float y) {
     return lerp(u, lerp(v, dbl, dtl), lerp(v, dbr, dtr));
 }
 
+out vertex_shader_out {
+    vec3 fragment_position;
+} vs_out;
+
 void main() {
-    gl_Position = vp * model * vec4(vec3(aPos.x, perlinNoise(aPos.x * 0.5, aPos.z * 0.5), aPos.z), 1.0);
+    float amp = 1.5;
+    float freq = 1.0;
+    float gain = 0.5;
+    float lacunarity = 2.0;
+
+    float total = 0.0;
+
+    vec3 terrain = vec3(aPos.x, 0.0, aPos.z);
+    for (int i = 0; i < 6; i++) {
+        terrain.y += amp * pow(perlinNoise((aPos.x + x_pos) * freq, (aPos.z + z_pos) * freq), 3);
+        total += amp;
+        freq *= lacunarity;
+        amp *= gain;
+    }
+    terrain.y /= total;
+
+    gl_Position = vp * model * vec4(terrain, 1.0);
+    vs_out.fragment_position = vec3(model * vec4(terrain, 1.0));
 }
