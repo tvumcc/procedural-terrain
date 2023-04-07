@@ -3,6 +3,7 @@
 
 #include "shader.hpp"
 #include "camera.hpp"
+#include "settings.hpp"
 
 #include <vector>
 #include <algorithm>
@@ -11,17 +12,21 @@
 
 static float delta_time = 0.0f;
 static float prev_time = 0.0f;
-
+static float width = 10;
+static float height = 10;
+static unsigned int subdivisions = 800;
+static Settings settings = Settings();
 static glm::vec2 xz_pos(0.0f, 0.0f);
+static glm::vec2 last_xz_pos(0.05f, 0.05f);
+static Camera cam(glm::vec3(5.0f, 1.5f, 5.0f));
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 
-Camera cam(glm::vec3(4.0f, 3.0f, 4.0f));
 int main() {
 	std::vector<int> p_table(256);
-	std::mt19937 rng(456789654);
+	std::mt19937 rng(settings.seed);
 	for (int i = 0; i < p_table.size(); i++) {
 		p_table[i] = i;
 	}
@@ -30,13 +35,10 @@ int main() {
 		p_table.push_back(i);
 	}
 
-	unsigned int width = 8;
-	unsigned int height = 8;
-	unsigned int subdivisions = 1600;
 	std::vector<float> terrain_mesh_vertices;
 
-	for (float z = 0.0f; z < (float)(height); z += (float)(height) / (float)subdivisions) {
-		for (float x = 0.0f; x < (float)(width); x += (float)(width) / (float)subdivisions) {
+	for (float z = 0.0f; z < height; z += height / subdivisions) {
+		for (float x = 0.0f; x < width; x += width / subdivisions) {
 			// First triangle
 			terrain_mesh_vertices.push_back(x);
 			terrain_mesh_vertices.push_back(0.0f);
@@ -44,27 +46,26 @@ int main() {
 
 			terrain_mesh_vertices.push_back(x);
 			terrain_mesh_vertices.push_back(0.0f);
-			terrain_mesh_vertices.push_back(z+(float)(height) / (float)subdivisions);
+			terrain_mesh_vertices.push_back(z + height / subdivisions);
 
-			terrain_mesh_vertices.push_back(x+(float)(width) / (float)subdivisions);
+			terrain_mesh_vertices.push_back(x + width / subdivisions);
 			terrain_mesh_vertices.push_back(0.0f);
 			terrain_mesh_vertices.push_back(z);
 
 			// Second triangle
-			terrain_mesh_vertices.push_back(x+(float)(width) / (float)subdivisions);
+			terrain_mesh_vertices.push_back(x + width / subdivisions);
 			terrain_mesh_vertices.push_back(0.0f);
 			terrain_mesh_vertices.push_back(z);
 
 			terrain_mesh_vertices.push_back(x);
 			terrain_mesh_vertices.push_back(0.0f);
-			terrain_mesh_vertices.push_back(z+(float)(height) / (float)subdivisions);
+			terrain_mesh_vertices.push_back(z + height / subdivisions);
 
-			terrain_mesh_vertices.push_back(x+(float)(width) / (float)subdivisions);
+			terrain_mesh_vertices.push_back(x + width / subdivisions);
 			terrain_mesh_vertices.push_back(0.0f);
-			terrain_mesh_vertices.push_back(z+(float)(height) / (float)subdivisions);
+			terrain_mesh_vertices.push_back(z + height / subdivisions);
 		}
 	}	
-
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); 
@@ -79,7 +80,7 @@ int main() {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glEnable(GL_DEPTH_TEST);
 
-	unsigned int VAO, VBO, EBO;
+	unsigned int VAO, VBO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
@@ -98,7 +99,7 @@ int main() {
     shader.set_vec3("color", terrain_color);
 	glUniform1iv(glGetUniformLocation(shader.ID, "permutation_table"), 512, p_table.data());
 
-	Shader water("shaders/water/water.vert", "shaders/water/water.frag", "shaders/water/water.geom");
+	Shader water("shaders/water/water.vert", "shaders/water/water.frag");
 	water.bind();
 	glm::vec3 water_color = glm::vec3(27.0f, 191.0f, 255.0f) / 255.0f;
 	glm::vec3 water_pos = glm::vec3(0.0f, -0.1f, 0.0f);
@@ -106,7 +107,6 @@ int main() {
 
 	cam.set_aspect_ratio(900, 900);
 	while (!glfwWindowShouldClose(window)) {
-		std::cout << xz_pos.x << ", " << xz_pos.y << "\r";
 		float time = (float)glfwGetTime();
 		delta_time = time - prev_time;
 		prev_time = time;
@@ -125,6 +125,8 @@ int main() {
 		shader.set_mat4x4("vp", cam.vp_matrix());
 		shader.set_float("x_pos", xz_pos.x);
 		shader.set_float("z_pos", xz_pos.y);
+		shader.set_float("last_x_pos", last_xz_pos.x);
+		shader.set_float("last_z_pos", last_xz_pos.y);
 		glDrawArrays(GL_TRIANGLES, 0, terrain_mesh_vertices.size() / 3);
 
 		water.bind();
@@ -153,10 +155,22 @@ void process_input(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) xz_pos += glm::vec2(cam.get_front().x, cam.get_front().z) * 8.0f * delta_time;
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) xz_pos -= glm::vec2(cam.get_front().x, cam.get_front().z) * 8.0f * delta_time;
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) xz_pos -= glm::vec2(cam.get_right().x, cam.get_right().z) * 8.0f * delta_time;
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) xz_pos += glm::vec2(cam.get_right().x, cam.get_right().z) * 8.0f * delta_time;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		last_xz_pos = xz_pos;
+		xz_pos -= glm::vec2(glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).x, glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).z) * settings.camera_speed * delta_time;
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		last_xz_pos = xz_pos;
+		xz_pos += glm::vec2(glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).x, glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).z) * settings.camera_speed * delta_time;
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		last_xz_pos = xz_pos;
+		xz_pos -= glm::vec2(cam.get_right().x, cam.get_right().z) * settings.camera_speed * delta_time;
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		last_xz_pos = xz_pos;
+		xz_pos += glm::vec2(cam.get_right().x, cam.get_right().z) * settings.camera_speed * delta_time;
+	}
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) cam.move(Direction::Up, delta_time);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) cam.move(Direction::Down, delta_time);
 }

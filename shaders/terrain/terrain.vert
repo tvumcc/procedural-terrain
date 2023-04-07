@@ -6,6 +6,8 @@ uniform mat4 model;
 uniform mat4 vp;
 uniform float x_pos;
 uniform float z_pos;
+uniform float last_x_pos;
+uniform float last_z_pos;
 uniform int permutation_table[512];
 
 vec2 constantVector(int value) {
@@ -71,7 +73,7 @@ void main() {
 
     vec3 terrain = vec3(aPos.x, 0.0, aPos.z);
     for (int i = 0; i < 6; i++) {
-        terrain.y += amp * pow(perlinNoise((aPos.x + x_pos) * freq, (aPos.z + z_pos) * freq), 3);
+        terrain.y += amp * pow((perlinNoise((aPos.x + x_pos) * freq, (aPos.z + z_pos) * freq) + perlinNoise((aPos.x + last_x_pos) * freq, (aPos.z + last_z_pos) * freq))/2.0, 3);
         total += amp;
         freq *= lacunarity;
         amp *= gain;

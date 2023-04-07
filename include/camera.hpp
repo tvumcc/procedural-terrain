@@ -1,5 +1,4 @@
 #pragma once
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -13,8 +12,6 @@ public:
 	void move(Direction direction, float deltaTime);
 	void rotate(float x_offset, float y_offset);
 
-	glm::mat4 view_matrix();
-	glm::mat4 proj_matrix();
 	glm::mat4 vp_matrix();
 
 	bool get_first_mouse();

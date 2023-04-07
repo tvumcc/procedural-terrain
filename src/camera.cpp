@@ -25,7 +25,8 @@ void Camera::move(Direction direction, float deltaTime) {
 	if (direction == Direction::Down) position -= glm::vec3(0.0f, 1.0f, 0.0f) * movement_speed * deltaTime;
 }
 
-void Camera::rotate(float x_offset, float y_offset) { x_offset *= mouse_sensitivity;
+void Camera::rotate(float x_offset, float y_offset) { 
+	x_offset *= mouse_sensitivity;
 	y_offset *= mouse_sensitivity;
 
 	yaw += x_offset;
@@ -35,16 +36,6 @@ void Camera::rotate(float x_offset, float y_offset) { x_offset *= mouse_sensitiv
 	if (pitch < -89.0f) pitch = -89.0f;
 
 	update_camera_vectors();
-}
-
-glm::mat4 Camera::view_matrix() {
-	glm::mat4 view = glm::mat4(1.0f);
-	return glm::lookAt(position, position + front, up);
-}
-
-glm::mat4 Camera::proj_matrix() {
-	glm::mat4 proj = glm::mat4(1.0f);
-	return glm::perspective(glm::radians(fov), aspect_ratio, 0.1f, 100.0f);
 }
 
 glm::mat4 Camera::vp_matrix() {
