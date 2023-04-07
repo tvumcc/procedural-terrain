@@ -11,6 +11,14 @@ uniform float z_pos;
 uniform float last_x_pos;
 uniform float last_z_pos;
 
+uniform float amp;
+uniform float freq;
+uniform float gain;
+uniform float lacunarity;
+uniform float fudge;
+uniform float exponent;
+uniform int seed;
+
 // Beginning of FastNoiseLite Code
 const int PRIME_X = 501125321;
 const int PRIME_Y = 1136930381;
@@ -97,21 +105,19 @@ out vertex_shader_out {
 } vs_out;
 
 void main() {
-    float amp = 1.5;
-    float freq = 1.0;
-    float gain = 0.5;
-    float lacunarity = 2.0;
-
     float total = 0.0;
+    float amp_tracker = amp;
+    float freq_tracker = freq;
 
     vec3 terrain = vec3(aPos.x, 0.0, aPos.z);
     for (int i = 0; i < 6; i++) {
-        terrain.y += amp * pow((_fnlSinglePerlin2D(31415, (aPos.x + x_pos) * freq, (aPos.z + z_pos) * freq) + _fnlSinglePerlin2D(31415, (aPos.x + last_x_pos) * freq, (aPos.z + last_z_pos) * freq))/2.0, 3);
-        total += amp;
-        freq *= lacunarity;
-        amp *= gain;
+        terrain.y += amp_tracker * _fnlSinglePerlin2D(seed + i, (aPos.x + x_pos) * freq_tracker, (aPos.z + z_pos) * freq_tracker);
+        total += amp_tracker;
+        freq_tracker *= lacunarity;
+        amp_tracker *= gain;
     }
     terrain.y /= total;
+    terrain.y = pow(terrain.y * fudge, 3.0);
 
     gl_Position = vp * model * vec4(terrain, 1.0);
     vs_out.fragment_position = vec3(model * vec4(terrain, 1.0));

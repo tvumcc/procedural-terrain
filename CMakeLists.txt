@@ -6,8 +6,21 @@ project(terrain)
 
 add_subdirectory("lib/glfw")
 find_package(OpenGL REQUIRED)
-include_directories(${OPENGL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/lib ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/lib/glm ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include)
+include_directories(${OPENGL_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/lib ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/lib/glm ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
+${CMAKE_CURRENT_SOURCE_DIR}/lib/imgui/include
+)
 
-add_executable(terrain src/shader.cpp src/main.cpp src/camera.cpp src/settings.cpp lib/glad/glad.c)
+add_executable(
+terrain 
+# Project
+src/shader.cpp src/main.cpp src/camera.cpp src/settings.cpp 
+
+# Imgui
+lib/imgui/src/imgui_demo.cpp lib/imgui/src/imgui_draw.cpp lib/imgui/src/imgui_impl_glfw.cpp lib/imgui/src/imgui_impl_opengl3.cpp lib/imgui/src/imgui_tables.cpp
+lib/imgui/src/imgui_widgets.cpp lib/imgui/src/imgui.cpp
+
+# GLAD
+lib/glad/glad.c
+)
 
 target_link_libraries(terrain PUBLIC ${OPENGL_LIBRARIES} glfw)

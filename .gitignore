@@ -2,3 +2,4 @@ build
 .vscode
 terrain.exe
 run.bat
+imgui.ini

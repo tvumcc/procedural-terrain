@@ -1,3 +1,6 @@
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 
@@ -9,16 +12,21 @@
 #include <algorithm>
 #include <iostream>
 #include <random>
+#include <algorithm>
+#include <cmath>
 
 static float delta_time = 0.0f;
 static float prev_time = 0.0f;
-static float width = 10;
-static float height = 10;
-static unsigned int subdivisions = 800;
-static Settings settings = Settings();
+static float width = 15;
+static float height = 15;
+static unsigned int subdivisions = 1200;
 static glm::vec2 xz_pos(0.0f, 0.0f);
 static glm::vec2 last_xz_pos(0.05f, 0.05f);
-static Camera cam(glm::vec3(5.0f, 1.5f, 5.0f));
+static Settings settings = Settings();
+
+static int window_width = 1000;
+static int window_height = 800;
+static Camera cam(glm::vec3(width / 2.0f, 1.5f, height / 2.0f));
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow* window);
@@ -59,17 +67,20 @@ int main() {
 	}	
 
 	glfwInit();
+	glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(900, 900, "Procedural Terrain Generation", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(window_width, window_height, "Procedural Terrain Generation", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress); 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwGetWindowSize(window, &window_width, &window_height);
+	framebuffer_size_callback(window, window_width, window_height);
 	glEnable(GL_DEPTH_TEST);
 
 	unsigned int VAO, VBO;
@@ -86,6 +97,7 @@ int main() {
 
 	Shader shader("shaders/terrain/terrain.vert", "shaders/terrain/terrain.frag", "shaders/terrain/terrain.geom");
     shader.bind();
+	
     glm::vec3 terrain_color = glm::vec3(36.0f, 140.0f, 64.0f) / 255.0f;
 	glm::vec3 terrain_pos = glm::vec3(0.0f, 0.0f, 0.0f);
     shader.set_vec3("color", terrain_color);
@@ -96,9 +108,16 @@ int main() {
 	glm::vec3 water_pos = glm::vec3(0.0f, -0.1f, 0.0f);
 	water.set_vec3("color", water_color);
 
-	cam.set_aspect_ratio(900, 900);
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.IniFilename = NULL;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
+
 	while (!glfwWindowShouldClose(window)) {
-		std::cout << xz_pos.x << ", " << xz_pos.y << "\r";
 		float time = (float)glfwGetTime();
 		delta_time = time - prev_time;
 		prev_time = time;
@@ -108,6 +127,9 @@ int main() {
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		glBindVertexArray(VAO);
 		glm::mat4 model = glm::mat4(1.0f);
@@ -120,6 +142,17 @@ int main() {
 		shader.set_float("z_pos", xz_pos.y);
 		shader.set_float("last_x_pos", last_xz_pos.x);
 		shader.set_float("last_z_pos", last_xz_pos.y);
+
+		shader.set_float("amp", settings.amplitude);
+		shader.set_float("freq", settings.frequency);
+		shader.set_float("gain", settings.gain);
+		shader.set_float("lacunarity", settings.lacunarity);
+		shader.set_float("fudge", settings.fudge);
+		shader.set_int("seed", settings.seed);
+
+		shader.set_vec3("light_pos", glm::vec3(settings.light_position[0], settings.light_position[1], settings.light_position[2]));
+		shader.set_vec3("light_color", glm::vec3(settings.light_color[0], settings.light_color[1], settings.light_color[2]));
+
 		glDrawArrays(GL_TRIANGLES, 0, terrain_mesh_vertices.size() / 3);
 
 		water.bind();
@@ -130,9 +163,42 @@ int main() {
 		water.set_float("time", time);
 		glDrawArrays(GL_TRIANGLES, 0, terrain_mesh_vertices.size() / 3);
 
+		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(350, 500), ImGuiCond_FirstUseEver);
+		ImGui::Begin("Settings");
+
+		ImGui::Text("Terrain");
+		if (ImGui::Button("Generate New Random Seed")) { 
+			srand((int)(glfwGetTime() * 10000));
+			settings.seed = rand();
+		}
+		ImGui::Text(("Seed: " + std::to_string(settings.seed)).c_str());
+		ImGui::SliderFloat("Frequency", &settings.frequency, 0.1f, 2.0f);
+		ImGui::SliderFloat("Gain", &settings.gain, 0.1f, 2.0f);
+		ImGui::SliderFloat("Lacunarity", &settings.lacunarity, 0.1f, 2.0f);
+		ImGui::SliderFloat("Contrast", &settings.fudge, 0.1f, 2.0f);
+
+		ImGui::Text("Lighting");
+		ImGui::SliderFloat3("Light Position", settings.light_position, (float)-width, (float)width);
+		ImGui::ColorEdit3("Light Color", settings.light_color);
+
+		ImGui::Text("Miscellaneous");
+		ImGui::SliderFloat("Camera Speed", &settings.camera_speed, 3.0f, 10.0f);
+		ImGui::Checkbox("Wireframe", &settings.wireframe_rendering);
+		ImGui::Checkbox("Capybara Mode", &settings.capybara_mode);
+
+		ImGui::End();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	glfwTerminate();
 	return 0;
@@ -204,4 +270,7 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
+	cam.set_aspect_ratio(width, height);
+	window_width = width;
+	window_height = height;
 }

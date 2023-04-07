@@ -13,17 +13,18 @@ public:
     void reset();
 
     // Terrain
-    unsigned int seed;
+    int seed;
     unsigned int octaves;
     float lacunarity;
     float gain;
     float amplitude;
     float frequency;
+    float fudge;
 
     // Lighting
-    glm::vec3 terrain_color;
-    glm::vec3 light_position;
-    glm::vec3 light_color;
+    float terrain_color[3];
+    float light_position[3];
+    float light_color[3];
     Skybox skybox;
 
     // Miscellaneous
