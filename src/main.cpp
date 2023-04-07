@@ -25,16 +25,6 @@ void process_input(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 
 int main() {
-	std::vector<int> p_table(256);
-	std::mt19937 rng(settings.seed);
-	for (int i = 0; i < p_table.size(); i++) {
-		p_table[i] = i;
-	}
-	std::shuffle(p_table.begin(), p_table.end(), rng);
-	for (int i = 0; i < 256; i++) {
-		p_table.push_back(i);
-	}
-
 	std::vector<float> terrain_mesh_vertices;
 
 	for (float z = 0.0f; z < height; z += height / subdivisions) {
@@ -97,7 +87,6 @@ int main() {
     glm::vec3 terrain_color = glm::vec3(36.0f, 140.0f, 64.0f) / 255.0f;
 	glm::vec3 terrain_pos = glm::vec3(0.0f, 0.0f, 0.0f);
     shader.set_vec3("color", terrain_color);
-	glUniform1iv(glGetUniformLocation(shader.ID, "permutation_table"), 512, p_table.data());
 
 	Shader water("shaders/water/water.vert", "shaders/water/water.frag");
 	water.bind();
@@ -107,6 +96,7 @@ int main() {
 
 	cam.set_aspect_ratio(900, 900);
 	while (!glfwWindowShouldClose(window)) {
+		std::cout << xz_pos.x << ", " << xz_pos.y << "\r";
 		float time = (float)glfwGetTime();
 		delta_time = time - prev_time;
 		prev_time = time;
