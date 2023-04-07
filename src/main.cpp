@@ -23,6 +23,7 @@ static Camera cam(glm::vec3(5.0f, 1.5f, 5.0f));
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 int main() {
 	std::vector<float> terrain_mesh_vertices;
@@ -67,6 +68,7 @@ int main() {
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress); 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetKeyCallback(window, key_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glEnable(GL_DEPTH_TEST);
 
@@ -102,6 +104,7 @@ int main() {
 		prev_time = time;
 		
 		process_input(window);
+		glPolygonMode(GL_FRONT_AND_BACK, settings.wireframe_rendering ? GL_LINE : GL_FILL);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -135,34 +138,48 @@ int main() {
 	return 0;
 }
 
+// Processes continuous input
 void process_input(GLFWwindow* window) {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+	// Movement Controls
+	if (settings.camera_mode) {
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+			last_xz_pos = xz_pos;
+			// Ensures that movement speed doesn't slow down when looking directly up or directly down
+			xz_pos -= glm::vec2(glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).x, glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).z) * settings.camera_speed * delta_time;
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+			last_xz_pos = xz_pos;
+			xz_pos += glm::vec2(glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).x, glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).z) * settings.camera_speed * delta_time;
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+			last_xz_pos = xz_pos;
+			xz_pos -= glm::vec2(cam.get_right().x, cam.get_right().z) * settings.camera_speed * delta_time;
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+			last_xz_pos = xz_pos;
+			xz_pos += glm::vec2(cam.get_right().x, cam.get_right().z) * settings.camera_speed * delta_time;
+		}
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) cam.move(Direction::Up, delta_time);
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) cam.move(Direction::Down, delta_time);
+	}
+}
+
+// Processes single click input
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	// Toggles Camera Movement Mode
+	if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+		settings.camera_mode = !settings.camera_mode;
+		if (settings.camera_mode) {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		} else {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+	}
+
+	// Closes the program
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}
-	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	}
-	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		last_xz_pos = xz_pos;
-		xz_pos -= glm::vec2(glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).x, glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).z) * settings.camera_speed * delta_time;
-	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		last_xz_pos = xz_pos;
-		xz_pos += glm::vec2(glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).x, glm::cross(cam.get_right(), glm::vec3(0.0f, 1.0f, 0.0f)).z) * settings.camera_speed * delta_time;
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		last_xz_pos = xz_pos;
-		xz_pos -= glm::vec2(cam.get_right().x, cam.get_right().z) * settings.camera_speed * delta_time;
-	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		last_xz_pos = xz_pos;
-		xz_pos += glm::vec2(cam.get_right().x, cam.get_right().z) * settings.camera_speed * delta_time;
-	}
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) cam.move(Direction::Up, delta_time);
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) cam.move(Direction::Down, delta_time);
 }
 
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
@@ -180,8 +197,9 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
 	float y_offset = last_y - (float)y_pos;
 	last_x = (float)x_pos;
 	last_y = (float)y_pos;
-
-	cam.rotate(x_offset, y_offset);
+	
+	if (settings.camera_mode)
+		cam.rotate(x_offset, y_offset);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {

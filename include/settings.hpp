@@ -30,4 +30,5 @@ public:
     float camera_speed;
     bool wireframe_rendering;
     bool capybara_mode;
+    bool camera_mode;
 };

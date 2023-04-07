@@ -2,6 +2,7 @@
 
 Settings::Settings() {
     this->reset();
+    this->camera_mode = true;
 }
 
 void Settings::reset() {
