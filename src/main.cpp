@@ -3,6 +3,7 @@
 #include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
+#include <stb_image/stb_image.h>
 
 #include "shader.hpp"
 #include "camera.hpp"
@@ -64,7 +65,19 @@ int main() {
 			terrain_mesh_vertices.push_back(0.0f);
 			terrain_mesh_vertices.push_back(z + height / subdivisions);
 		}
-	}	
+	}
+
+	float water_mesh[] {
+		 7.5f,  0.0f, 7.5f,   256.0f, 256.0f,// top right
+		 7.5f,  0.0f, -7.5f,  256.0f, 0.0f,// bottom right
+		-7.5f,  0.0f, -7.5f,  0.0f, 0.0f,// bottom left
+		-7.5f,  0.0f, 7.5f,   0.0f, 256.0f,// top left 	
+	};
+
+	unsigned int water_indices[] {
+		0, 1, 2,
+		0, 2, 3,
+	};
 
 	glfwInit();
 	glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
@@ -95,18 +108,54 @@ int main() {
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
 
+
+	unsigned int waterVAO, waterVBO, waterEBO;
+	glGenVertexArrays(1, &waterVAO);
+	glBindVertexArray(waterVAO);
+
+	glGenBuffers(1, &waterVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, waterVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(water_mesh), water_mesh, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &waterEBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, waterEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(water_indices), water_indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+	glBindVertexArray(0);
+
+	unsigned int texture1;
+	glGenTextures(1, &texture1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // The texture will be repeated (tiled) on the s axis (x) when the texture coordinates exceed 1.0
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // The texture will be repeated (tiled) on the t axis (x) when the texture coordinates exceed 1.0
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // Will linearly interpolate between the two closest mipmaps and then linear interpolate the texel color when the texture is minified
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Uses linear interpolation to sample the color of a texel when the texture is magnified
+
+	int texture_width, texture_height, nrChannels;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char* data = stbi_load("assets/water.jpg", &texture_width, &texture_height, &nrChannels, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture_width, texture_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(data);
+
 	Shader shader("shaders/terrain/terrain.vert", "shaders/terrain/terrain.frag", "shaders/terrain/terrain.geom");
     shader.bind();
 	
     glm::vec3 terrain_color = glm::vec3(36.0f, 140.0f, 64.0f) / 255.0f;
 	glm::vec3 terrain_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-    shader.set_vec3("color", terrain_color);
+    // shader.set_vec3("color", terrain_color);
 
 	Shader water("shaders/water/water.vert", "shaders/water/water.frag");
 	water.bind();
-	glm::vec3 water_color = glm::vec3(27.0f, 191.0f, 255.0f) / 255.0f;
+	glm::vec3 water_color = glm::vec3(0.0f, 187.0f, 255.0f) / 255.0f;
 	glm::vec3 water_pos = glm::vec3(0.0f, -0.1f, 0.0f);
 	water.set_vec3("color", water_color);
+	water.set_int("water", 0);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -154,19 +203,26 @@ int main() {
 		shader.set_vec3("light_color", glm::vec3(settings.light_color[0], settings.light_color[1], settings.light_color[2]));
 
 		glDrawArrays(GL_TRIANGLES, 0, terrain_mesh_vertices.size() / 3);
+		glBindVertexArray(0);
 
 		water.bind();
+		glBindVertexArray(waterVAO);
 		glm::mat4 waterModel = glm::mat4(1.0f);
-		waterModel = glm::translate(model, water_pos);
+		waterModel = glm::translate(waterModel, glm::vec3(width / 2.0f, -0.1f, height / 2.0f));
+		waterModel = glm::scale(waterModel, glm::vec3(1.0f, 1.0f, 1.0f));
 		water.set_mat4x4("model", waterModel);
 		water.set_mat4x4("vp", cam.vp_matrix());
-		water.set_float("time", time);
-		glDrawArrays(GL_TRIANGLES, 0, terrain_mesh_vertices.size() / 3);
+		water.set_float("water_level", settings.water_level);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture1);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowSize(ImVec2(350, 500), ImGuiCond_FirstUseEver);
 		ImGui::Begin("Settings");
-
+		if(ImGui::Button("Reset to Default Settings")) {
+			settings.reset();
+		}
 		ImGui::Text("Terrain");
 		if (ImGui::Button("Generate New Random Seed")) { 
 			srand((int)(glfwGetTime() * 10000));
@@ -177,6 +233,7 @@ int main() {
 		ImGui::SliderFloat("Gain", &settings.gain, 0.1f, 2.0f);
 		ImGui::SliderFloat("Lacunarity", &settings.lacunarity, 0.1f, 2.0f);
 		ImGui::SliderFloat("Contrast", &settings.fudge, 0.1f, 2.0f);
+		ImGui::SliderFloat("Water Level", &settings.water_level, -0.5f, 0.090f);
 
 		ImGui::Text("Lighting");
 		ImGui::SliderFloat3("Light Position", settings.light_position, (float)-width, (float)width);
@@ -185,7 +242,6 @@ int main() {
 		ImGui::Text("Miscellaneous");
 		ImGui::SliderFloat("Camera Speed", &settings.camera_speed, 3.0f, 10.0f);
 		ImGui::Checkbox("Wireframe", &settings.wireframe_rendering);
-		ImGui::Checkbox("Capybara Mode", &settings.capybara_mode);
 
 		ImGui::End();
 

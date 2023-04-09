@@ -4,7 +4,7 @@ out vec4 FragColor;
 in vec3 norm;
 in vec3 fragment_position;
 
-uniform vec3 color;
+in vec3 color;
 uniform vec3 light_pos;
 uniform vec3 light_color;
 

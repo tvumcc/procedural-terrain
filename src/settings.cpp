@@ -13,7 +13,8 @@ void Settings::reset() {
     this->gain = 0.5f;
     this->amplitude = 1.0f;
     this->frequency = 1.0f;
-    this->fudge = 1.5f;
+    this->fudge = 1.2f;
+    this->water_level = 0.055f;
 
     this->terrain_color[0] = 36.0f;
     this->terrain_color[1] = 140.0f;

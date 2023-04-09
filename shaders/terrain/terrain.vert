@@ -3,6 +3,7 @@
 #define FNLfloat float
 
 layout (location = 0) in vec3 aPos;
+out vec3 color;
 
 uniform mat4 model;
 uniform mat4 vp;
@@ -118,7 +119,7 @@ void main() {
     }
     terrain.y /= total;
     terrain.y = pow(terrain.y * fudge, 3.0);
-
+    
     gl_Position = vp * model * vec4(terrain, 1.0);
     vs_out.fragment_position = vec3(model * vec4(terrain, 1.0));
 }

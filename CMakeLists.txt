@@ -19,6 +19,9 @@ src/shader.cpp src/main.cpp src/camera.cpp src/settings.cpp
 lib/imgui/src/imgui_demo.cpp lib/imgui/src/imgui_draw.cpp lib/imgui/src/imgui_impl_glfw.cpp lib/imgui/src/imgui_impl_opengl3.cpp lib/imgui/src/imgui_tables.cpp
 lib/imgui/src/imgui_widgets.cpp lib/imgui/src/imgui.cpp
 
+# stb image
+lib/stb_image/stb_image.cpp
+
 # GLAD
 lib/glad/glad.c
 )

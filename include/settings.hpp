@@ -20,6 +20,7 @@ public:
     float amplitude;
     float frequency;
     float fudge;
+    float water_level;
 
     // Lighting
     float terrain_color[3];
