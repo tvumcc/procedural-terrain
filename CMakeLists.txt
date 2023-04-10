@@ -13,7 +13,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/lib/imgui/include
 add_executable(
 terrain 
 # Project
-src/shader.cpp src/main.cpp src/camera.cpp src/settings.cpp 
+src/shader.cpp src/main.cpp src/camera.cpp
 src/terrain.cpp src/water.cpp src/point_light.cpp
 
 # Imgui

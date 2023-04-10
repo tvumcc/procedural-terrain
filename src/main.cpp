@@ -7,7 +7,6 @@
 
 #include "shader.hpp"
 #include "camera.hpp"
-#include "settings.hpp"
 #include "point_light.hpp"
 #include "water.hpp"
 #include "terrain.hpp"
@@ -21,8 +20,13 @@
 
 static float delta_time = 0.0f;
 static float prev_time = 0.0f;
-static Settings settings = Settings();
+static float prev = 0.0f;
+static float diff = 0.0f;
+static unsigned int counter = 0;
+static float FPS = 0.0f;
 static bool wireframe = false;
+static bool fps_counter = false;
+static bool camera_mode = true;
 
 static int window_width = 1000;
 static int window_height = 1000;
@@ -49,6 +53,17 @@ int main() {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwGetWindowSize(window, &window_width, &window_height);
 	framebuffer_size_callback(window, window_width, window_height);
+
+	// Load the icon
+	GLFWimage icon; 
+	icon.pixels = stbi_load("assets/Earth.png", &icon.width, &icon.height, 0, 4);
+	if (icon.pixels != NULL) {
+		glfwSetWindowIcon(window, 1, &icon); 
+	} else {
+		std::cout << "ERROR: Could not find Earth.png" << std::endl;
+	}
+	stbi_image_free(icon.pixels);
+
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -74,6 +89,14 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		float time = (float)glfwGetTime();
 		delta_time = time - prev_time;
+		diff = time - prev;
+
+		counter++;
+		if (diff >= 1.0f / 30.0f) {
+			FPS = (1.0f / diff) * counter;
+			counter = 0;
+			prev = time;
+		}
 		prev_time = time;
 		
 		process_input(window);
@@ -87,16 +110,16 @@ int main() {
 		terrain.draw(terrain_shader, cam, light);
 		water.draw(water_shader, cam, light, terrain.get_width(), terrain.get_height());
 
+		// ImGui stuff
 		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowSize(ImVec2(350, 500), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(350, 550), ImGuiCond_FirstUseEver);
 		ImGui::Begin("Settings");
 		if(ImGui::Button("Reset to Default Settings")) {
 			terrain.reset_settings();
 			water.reset_settings();
 			light.reset_settings();
-			wireframe = false;
 		}
-		ImGui::Text("Terrain");
+		ImGui::Text("\nTerrain");
 		if (ImGui::Button("Generate New Random Seed")) { 
 			srand((int)(glfwGetTime() * 10000));
 			terrain.seed = rand();
@@ -108,15 +131,29 @@ int main() {
 		ImGui::SliderFloat("Contrast", &terrain.contrast, 0.1f, 2.0f);
 		ImGui::SliderFloat("Water Level", &water.water_level, -0.5f, 0.090f);
 
-		ImGui::Text("Lighting");
+		ImGui::Text("\nLighting");
 		ImGui::SliderFloat3("Light Position", light.position, -terrain.get_width(), terrain.get_width());
 		ImGui::ColorEdit3("Light Color", light.color);
 
-		ImGui::Text("Miscellaneous");
+		ImGui::Text("\nMiscellaneous");
 		ImGui::SliderFloat("Camera Speed", &cam.movement_speed, 3.0f, 10.0f);
 		ImGui::Checkbox("Wireframe", &wireframe);
-
+		ImGui::Checkbox("FPS Counter", &fps_counter);
+		
+		ImGui::Text("\nControls");
+		ImGui::Text("F - Toggles the mouse");
+		ImGui::Text("WASD - Camera Movement");
+		ImGui::Text("Space - Move camera up");
+		ImGui::Text("Shift - Move camera down");
+		ImGui::Text("Esc - Exit the program");
 		ImGui::End();
+		
+		if (fps_counter) {
+			ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 80, 10), ImGuiCond_FirstUseEver);
+			ImGui::Begin("FPS", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
+			ImGui::Text((std::string("FPS: ") + std::to_string((int)FPS)).c_str());
+			ImGui::End();
+		}
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -136,7 +173,7 @@ int main() {
 // Processes continuous input
 void process_input(GLFWwindow* window) {
 	// Movement Controls
-	if (settings.camera_mode) {
+	if (camera_mode) {
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) cam.move(Direction::Forward, delta_time);
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) cam.move(Direction::Backward, delta_time);
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) cam.move(Direction::Left, delta_time);
@@ -150,8 +187,8 @@ void process_input(GLFWwindow* window) {
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	// Toggles Camera Movement Mode
 	if (key == GLFW_KEY_F && action == GLFW_PRESS) {
-		settings.camera_mode = !settings.camera_mode;
-		if (settings.camera_mode) {
+		camera_mode = !camera_mode;
+		if (camera_mode) {
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		} else {
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -180,7 +217,7 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
 	last_x = (float)x_pos;
 	last_y = (float)y_pos;
 	
-	if (settings.camera_mode)
+	if (camera_mode)
 		cam.rotate(x_offset, y_offset);
 }
 
