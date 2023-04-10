@@ -3,12 +3,12 @@
 Camera::Camera(glm::vec3 position) {
 	this->position = position;
 	
-	this->aspect_ratio = 800.0f/600.0f;
+	this->aspect_ratio = 1.0f;
 	this->fov = 45.0f;
 	this->yaw = -90.0f; 
 	this->pitch = 0.0f;
 
-	this->movement_speed = 2.5f;
+	this->movement_speed = 5.0f;
 	this->mouse_sensitivity = 0.1f;
 
 	this->first_mouse = true;
@@ -17,12 +17,12 @@ Camera::Camera(glm::vec3 position) {
 
 
 void Camera::move(Direction direction, float deltaTime) {
-	if (direction == Direction::Forward) position += front * movement_speed * deltaTime;
-	if (direction == Direction::Backward) position -= front * movement_speed * deltaTime;
-	if (direction == Direction::Right) position += right * movement_speed * deltaTime;
-	if (direction == Direction::Left) position -= right * movement_speed * deltaTime;
-	if (direction == Direction::Up) position += glm::vec3(0.0f, 1.0f, 0.0f) * movement_speed * deltaTime;
-	if (direction == Direction::Down) position -= glm::vec3(0.0f, 1.0f, 0.0f) * movement_speed * deltaTime;
+	if (direction == Direction::Forward)  xz_pos -= glm::vec2(glm::cross(right, glm::vec3(0.0f, 1.0f, 0.0f)).x, glm::cross(right, glm::vec3(0.0f, 1.0f, 0.0f)).z) * movement_speed * deltaTime;
+	if (direction == Direction::Backward) xz_pos += glm::vec2(glm::cross(right, glm::vec3(0.0f, 1.0f, 0.0f)).x, glm::cross(right , glm::vec3(0.0f, 1.0f, 0.0f)).z) * movement_speed * deltaTime;
+	if (direction == Direction::Left)     xz_pos -= glm::vec2(right.x, right.z) * movement_speed * deltaTime;
+	if (direction == Direction::Right)    xz_pos += glm::vec2(right.x, right.z) * movement_speed * deltaTime;
+	if (direction == Direction::Up)       position += glm::vec3(0.0f, 1.0f, 0.0f) * movement_speed * deltaTime;
+	if (direction == Direction::Down)     position -= glm::vec3(0.0f, 1.0f, 0.0f) * movement_speed * deltaTime;
 }
 
 void Camera::rotate(float x_offset, float y_offset) { 
@@ -48,13 +48,15 @@ bool Camera::get_first_mouse() {return this->first_mouse;}
 void Camera::unset_first_mouse() {this->first_mouse = false;}
 
 glm::vec3 Camera::get_position() {return this->position;}
+void Camera::set_position(glm::vec3 pos) {this->position = pos;}
 glm::vec3 Camera::get_front() {return this->front;}
 glm::vec3 Camera::get_right() {return this->right;}
 
-void Camera::set_fov(float fov) {this->fov = fov;}
 void Camera::set_aspect_ratio(int width, int height) {this->aspect_ratio = (float)width/(float)height;}
-void Camera::set_speed(float speed) {this->movement_speed = speed;}
-void Camera::set_sensitivity(float sensitivity) {this->mouse_sensitivity = sensitivity;}
+
+void Camera::reset_settings() {
+	this->movement_speed = 5.0f;
+}
 
 void Camera::update_camera_vectors() {
 	glm::vec3 direction;

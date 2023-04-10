@@ -9,8 +9,6 @@ uniform mat4 model;
 uniform mat4 vp;
 uniform float x_pos;
 uniform float z_pos;
-uniform float last_x_pos;
-uniform float last_z_pos;
 
 uniform float amp;
 uniform float freq;

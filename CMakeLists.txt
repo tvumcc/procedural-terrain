@@ -14,6 +14,7 @@ add_executable(
 terrain 
 # Project
 src/shader.cpp src/main.cpp src/camera.cpp src/settings.cpp 
+src/terrain.cpp src/water.cpp src/point_light.cpp
 
 # Imgui
 lib/imgui/src/imgui_demo.cpp lib/imgui/src/imgui_draw.cpp lib/imgui/src/imgui_impl_glfw.cpp lib/imgui/src/imgui_impl_opengl3.cpp lib/imgui/src/imgui_tables.cpp

@@ -7,7 +7,7 @@ Settings::Settings() {
 
 void Settings::reset() {
     // Default settings
-    this->seed = 31415926535;
+    this->seed = 314159265;
     this->octaves = 6;
     this->lacunarity = 2.0f;
     this->gain = 0.5f;

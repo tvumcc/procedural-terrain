@@ -18,13 +18,16 @@ public:
 	void unset_first_mouse();
 
 	glm::vec3 get_position();
+	void set_position(glm::vec3 pos);
 	glm::vec3 get_front();
 	glm::vec3 get_right();
 
-	void set_fov(float fov);
 	void set_aspect_ratio(int width, int height);
-	void set_speed(float speed);
-	void set_sensitivity(float sensitivity);
+
+	void reset_settings();
+
+	glm::vec2 xz_pos;
+	float movement_speed;
 private:
 	glm::vec3 position;
 	glm::vec3 front;
@@ -36,7 +39,6 @@ private:
 	float fov;
 	float aspect_ratio;
 
-	float movement_speed;
 	float mouse_sensitivity;
 	bool first_mouse;
 
