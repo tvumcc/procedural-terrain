@@ -25,9 +25,9 @@ Make sure that you run the executable from the root of the project or else the s
 
 ## Libraries
 
-[glfw](https://github.com/glfw/glfw) - for window management and input handling
-[glad](https://glad.dav1d.de/) - for loading OpenGL functions
-[glm](https://github.com/g-truc/glm) - for linear algebra
-[stb_image](https://github.com/nothings/stb/blob/master/stb_image.h) - for image loading
-[imgui](https://github.com/ocornut/imgui) - for GUI
-[FastNoiseLite](https://github.com/Auburn/FastNoiseLite) - for the GLSL implementation of Perlin Noise
+- [glfw](https://github.com/glfw/glfw) - for window management and input handling
+- [glad](https://glad.dav1d.de/) - for loading OpenGL functions
+- [glm](https://github.com/g-truc/glm) - for linear algebra
+- [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h) - for image loading
+- [imgui](https://github.com/ocornut/imgui) - for GUI
+- [FastNoiseLite](https://github.com/Auburn/FastNoiseLite) - for the GLSL implementation of Perlin Noise
