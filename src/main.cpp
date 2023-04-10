@@ -26,7 +26,7 @@ static glm::vec2 last_xz_pos(0.05f, 0.05f);
 static Settings settings = Settings();
 
 static int window_width = 1000;
-static int window_height = 800;
+static int window_height = 1000;
 static Camera cam(glm::vec3(width / 2.0f, 1.5f, height / 2.0f));
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -212,6 +212,7 @@ int main() {
 		waterModel = glm::scale(waterModel, glm::vec3(1.0f, 1.0f, 1.0f));
 		water.set_mat4x4("model", waterModel);
 		water.set_mat4x4("vp", cam.vp_matrix());
+		water.set_vec3("light_color", glm::vec3(settings.light_color[0], settings.light_color[1], settings.light_color[2]));
 		water.set_float("water_level", settings.water_level);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
