@@ -116,7 +116,7 @@ void main() {
         amp_tracker *= gain;
     }
     terrain.y /= total;
-    terrain.y = pow(terrain.y * fudge, 3.0);
+    terrain.y = (terrain.y * fudge) * (terrain.y * fudge) * (terrain.y * fudge);
     
     gl_Position = vp * model * vec4(terrain, 1.0);
     vs_out.fragment_position = vec3(model * vec4(terrain, 1.0));
